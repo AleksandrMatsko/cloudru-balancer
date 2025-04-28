@@ -24,9 +24,9 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.Info("Request",
-		slog.String("Method", r.Method),
-		slog.String("URI", r.RequestURI),
-		slog.String("Body", string(bytes)),
+		slog.String("method", r.Method),
+		slog.String("uri", r.RequestURI),
+		slog.String("body", string(bytes)),
 	)
 }
 
