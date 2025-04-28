@@ -1,6 +1,6 @@
 # cloudru-balancer
 
-This project is a [test task](./task/README.md) for internship in cloud.ru.
+This project is a [test task](./task/README.md) for internship to cloud.ru.
 
 ## Build and run
 
