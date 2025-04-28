@@ -1,5 +1,5 @@
-// healthchecker contains entity that checks backend availability.
-package healthcheck
+// health contains entity that checks backend availability.
+package health
 
 import (
 	"context"
@@ -40,6 +40,7 @@ func NewChecker(
 		urlCreateFunc:  urlCreateFunc,
 		checkTimeout:   checkTimeout,
 		requestTimeout: requestTimeout,
+		observer:       observer,
 	}
 }
 
