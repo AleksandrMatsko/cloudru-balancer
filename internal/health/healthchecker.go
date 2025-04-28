@@ -21,6 +21,7 @@ type Checker struct {
 	checkTimeout   time.Duration
 	requestTimeout time.Duration
 	observer       Observer
+	wasHealfy      bool
 }
 
 // NewChecker creates new checker.
@@ -40,6 +41,7 @@ func NewChecker(
 		checkTimeout:   checkTimeout,
 		requestTimeout: requestTimeout,
 		observer:       observer,
+		wasHealfy:      false,
 	}
 }
 
@@ -73,9 +75,12 @@ func (checker *Checker) check(ctx context.Context) bool {
 
 	rsp, err := checker.client.Do(req)
 	if err != nil {
-		checker.logger.Warn("Backend unavailable",
-			slog.String("error", err.Error()),
-		)
+		if checker.wasHealfy {
+			checker.wasHealfy = false
+			checker.logger.Warn("Backend unavailable",
+				slog.String("error", err.Error()),
+			)
+		}
 
 		return false
 	}
@@ -84,10 +89,19 @@ func (checker *Checker) check(ctx context.Context) bool {
 	_, _ = io.ReadAll(rsp.Body)
 
 	if is5xxCode(rsp.StatusCode) {
-		checker.logger.Warn("Backend returns 5xx status code",
-			slog.String("status", rsp.Status),
-		)
+		if checker.wasHealfy {
+			checker.wasHealfy = false
+			checker.logger.Warn("Backend returns 5xx status code",
+				slog.String("status", rsp.Status),
+			)
+		}
+
 		return false
+	}
+
+	if !checker.wasHealfy {
+		checker.wasHealfy = true
+		checker.logger.Info("Backend is available again")
 	}
 
 	return true
