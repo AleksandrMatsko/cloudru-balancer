@@ -13,5 +13,4 @@ type Balancer struct {
 }
 
 func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 }

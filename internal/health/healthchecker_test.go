@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -16,24 +17,21 @@ func TestChecker(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/return_ok", func(w http.ResponseWriter, r *http.Request) {
-		r.Body.Close()
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "return_ok" || r.URL.Path == "/return_ok" {
+				w.WriteHeader(http.StatusOK)
+				fmt.Fprintf(w, "healthy")
+				return
+			}
 
-		w.WriteHeader(http.StatusOK)
-	})
-	mux.HandleFunc("/return_500", func(w http.ResponseWriter, r *http.Request) {
-		r.Body.Close()
-
-		w.WriteHeader(http.StatusServiceUnavailable)
-	})
-
-	server := httptest.NewServer(mux)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			fmt.Fprintf(w, "not healthy")
+		},
+	))
 	defer server.Close()
 
 	t.Run("with response ok", func(t *testing.T) {
-		t.Parallel()
-
 		mockObserver := mock_observer.NewMockObserver(mockCtrl)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -43,8 +41,8 @@ func TestChecker(t *testing.T) {
 			server.Client(),
 			server.URL,
 			func(s string) string { return server.URL + "/return_ok" },
-			time.Millisecond*80,
-			time.Millisecond*90,
+			time.Millisecond*100,
+			time.Millisecond*100,
 			mockObserver,
 		)
 
@@ -52,13 +50,12 @@ func TestChecker(t *testing.T) {
 
 		go checker.Run(ctx)
 
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 120)
+
 		cancel()
 	})
 
 	t.Run("with response status 5xx", func(t *testing.T) {
-		t.Parallel()
-
 		mockObserver := mock_observer.NewMockObserver(mockCtrl)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -67,9 +64,9 @@ func TestChecker(t *testing.T) {
 			slog.Default(),
 			server.Client(),
 			server.URL,
-			func(s string) string { return server.URL + "/return_500" },
-			time.Millisecond*500,
-			time.Millisecond*500,
+			func(s string) string { return server.URL + "/return_5xx" },
+			time.Millisecond*100,
+			time.Millisecond*100,
 			mockObserver,
 		)
 
@@ -77,7 +74,8 @@ func TestChecker(t *testing.T) {
 
 		go checker.Run(ctx)
 
-		time.Sleep(time.Millisecond * 600)
+		time.Sleep(time.Millisecond * 150)
+
 		cancel()
 	})
 }

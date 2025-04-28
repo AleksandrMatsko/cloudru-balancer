@@ -11,7 +11,7 @@ import (
 
 // Checker checks if the backend with specified url is healthy by sending GET requests.
 // Backend is healhy when:
-//   - no connection problems occured;
+//   - no connection problems occurred;
 //   - response on check health request does not have code in range [500, 599] inclusive.
 type Checker struct {
 	logger         *slog.Logger
@@ -32,7 +32,6 @@ func NewChecker(
 	checkTimeout, requestTimeout time.Duration,
 	observer Observer,
 ) *Checker {
-
 	return &Checker{
 		logger:         logger.With(slog.String("backend_healthcheck_url", urlCreateFunc(backend))),
 		client:         client,
