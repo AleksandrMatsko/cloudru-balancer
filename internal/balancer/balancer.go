@@ -2,25 +2,29 @@ package balancer
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 )
 
+// Balancer is reverse proxy that balance incoming requests between backends
+// according to the given strategy.
 type Balancer struct {
 	logger   *slog.Logger
 	strategy Strategy
-	proxies  map[string]*httputil.ReverseProxy
+	proxies  map[string]http.Handler
 }
 
+// NewBalancer creates Balancer.
 func NewBalancer(
 	logger *slog.Logger,
 	strategy Strategy,
 	backends []string,
 	urlCreateFunc func(string) *url.URL,
 ) *Balancer {
-	proxies := make(map[string]*httputil.ReverseProxy, len(backends))
+	proxies := make(map[string]http.Handler, len(backends))
 	for _, backend := range backends {
 		rp := httputil.NewSingleHostReverseProxy(urlCreateFunc(backend))
 		rp.ErrorHandler = createErrorHandler(logger.With(slog.String("backend", backend)))
@@ -56,7 +60,22 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b.proxies[backend].ServeHTTP(w, r)
+	proxy, ok := b.proxies[backend]
+	if !ok {
+		dto := ErrorResponse{
+			Msg:  fmt.Sprintf("strategy returned not existing backend: %s", backend),
+			Code: http.StatusInternalServerError,
+		}
+
+		w.WriteHeader(dto.Code)
+
+		encoder := json.NewEncoder(w)
+		_ = encoder.Encode(dto)
+
+		return
+	}
+
+	proxy.ServeHTTP(w, r)
 }
 
 type ErrorResponse struct {

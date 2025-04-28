@@ -46,7 +46,7 @@ func TestChecker(t *testing.T) {
 			mockObserver,
 		)
 
-		mockObserver.EXPECT().UpdateBackendHealth(server.URL, true)
+		mockObserver.EXPECT().UpdateBackendHealth(server.URL, true).Times(1)
 
 		go checker.Run(ctx)
 
@@ -70,7 +70,7 @@ func TestChecker(t *testing.T) {
 			mockObserver,
 		)
 
-		mockObserver.EXPECT().UpdateBackendHealth(server.URL, false)
+		mockObserver.EXPECT().UpdateBackendHealth(server.URL, false).Times(1)
 
 		go checker.Run(ctx)
 

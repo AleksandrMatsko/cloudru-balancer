@@ -9,7 +9,7 @@ type RoundRobin struct {
 	backendAvailable map[string]bool
 	// allBackends is a slice of available backend's hosts. Methods must not mutate the slice.
 	allBackends []string
-	// locker protects startIndex
+	// locker protects startIndex and backendAvailable map
 	locker     sync.Locker
 	startIndex int
 }
@@ -45,6 +45,7 @@ func (rr *RoundRobin) ChooseBackend() string {
 	return ""
 }
 
+// UpdateBackendHealth
 func (rr *RoundRobin) UpdateBackendHealth(backend string, healthy bool) {
 	rr.locker.Lock()
 	defer rr.locker.Unlock()
