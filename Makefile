@@ -1,3 +1,17 @@
+GO_PATH := $(shell go env GOPATH)
+GOLANGCI_LINT_VERSION := ""
+
+.PHONY: build-balancer
+build-balancer:
+	go build github.com/AleksandrMatsko/cloudru-balancer/cmd/balancer
+
+.PHONY: build-dummy
+build-dummy:
+	go build github.com/AleksandrMatsko/cloudru-balancer/cmd/dummy
+
+.PHONY: test
+test:
+	go test -v -race ./...
 
 .PHONY: install-lint
 install-lint:

@@ -2,4 +2,5 @@
 .idea/
 
 *.exe*
-cloudru-balancer
+balancer
+dummy
