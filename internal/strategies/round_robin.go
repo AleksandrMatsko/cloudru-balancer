@@ -6,6 +6,7 @@ import (
 
 // RoundRobin is a cyclic balancer strategy.
 type RoundRobin struct {
+	backendAvailable map[string]bool
 	// allBackends is a slice of available backend's hosts. Methods must not mutate the slice.
 	allBackends []string
 	// locker protects startIndex
@@ -15,36 +16,40 @@ type RoundRobin struct {
 
 // NewRoundRobin creates RoundRobin.
 func NewRoundRobin(backends []string) *RoundRobin {
-	if len(backends) <= 1 {
-		return &RoundRobin{
-			allBackends: backends,
-		}
+	availabilityMap := make(map[string]bool)
+	for i := range backends {
+		availabilityMap[backends[i]] = false
 	}
 
 	return &RoundRobin{
-		allBackends: backends,
-		locker:      &sync.Mutex{},
-		startIndex:  0,
+		backendAvailable: availabilityMap,
+		allBackends:      backends,
+		locker:           &sync.Mutex{},
+		startIndex:       0,
 	}
 }
 
-// SendOrder returns ordered backends according to RoundRobin strategy.
-func (rr *RoundRobin) SendOrder() []string {
-	orderedBackends := make([]string, len(rr.allBackends))
-	copy(orderedBackends, rr.allBackends)
-
-	if len(rr.allBackends) <= 1 {
-		return orderedBackends
-	}
-
+// ChooseBackend returns backend host which is ready to receive request.
+func (rr *RoundRobin) ChooseBackend() string {
 	rr.locker.Lock()
-	startIndexCopy := rr.startIndex
-	rr.startIndex = (rr.startIndex + 1) % len(rr.allBackends)
-	rr.locker.Unlock()
+	defer rr.locker.Unlock()
 
-	for i := range orderedBackends {
-		orderedBackends[i] = rr.allBackends[(startIndexCopy+i)%len(orderedBackends)]
+	for i := range rr.allBackends {
+		candidate := rr.allBackends[(rr.startIndex+i)%len(rr.allBackends)]
+		if rr.backendAvailable[candidate] {
+			rr.startIndex = (rr.startIndex + i + 1) % len(rr.allBackends)
+			return candidate
+		}
 	}
 
-	return orderedBackends
+	return ""
+}
+
+func (rr *RoundRobin) UpdateBackendHealth(backend string, healthy bool) {
+	rr.locker.Lock()
+	defer rr.locker.Unlock()
+
+	if _, ok := rr.backendAvailable[backend]; ok {
+		rr.backendAvailable[backend] = healthy
+	}
 }

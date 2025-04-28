@@ -6,14 +6,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRoundRobin_SendOrder(t *testing.T) {
+func TestRoundRobin(t *testing.T) {
 	t.Run("with no backends", func(t *testing.T) {
 		t.Parallel()
 
 		rr := NewRoundRobin([]string{})
 
-		assert.Empty(t, rr.SendOrder())
-		assert.Empty(t, rr.SendOrder())
+		assert.Equal(t, "", rr.ChooseBackend())
+		assert.Equal(t, "", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("A", true)
+
+		assert.Equal(t, "", rr.ChooseBackend())
 	})
 	t.Run("with 1 backend", func(t *testing.T) {
 		t.Parallel()
@@ -22,8 +26,21 @@ func TestRoundRobin_SendOrder(t *testing.T) {
 
 		rr := NewRoundRobin(backends)
 
-		assert.Equal(t, backends, rr.SendOrder())
-		assert.Equal(t, backends, rr.SendOrder())
+		assert.Equal(t, "", rr.ChooseBackend())
+		assert.Equal(t, "", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("A", true)
+
+		assert.Equal(t, "A", rr.ChooseBackend())
+		assert.Equal(t, "A", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("B", true)
+
+		assert.Equal(t, "A", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("A", false)
+
+		assert.Equal(t, "", rr.ChooseBackend())
 	})
 	t.Run("with more backends", func(t *testing.T) {
 		t.Parallel()
@@ -32,9 +49,22 @@ func TestRoundRobin_SendOrder(t *testing.T) {
 
 		rr := NewRoundRobin(backends)
 
-		assert.Equal(t, []string{"A", "B", "C"}, rr.SendOrder())
-		assert.Equal(t, []string{"B", "C", "A"}, rr.SendOrder())
-		assert.Equal(t, []string{"C", "A", "B"}, rr.SendOrder())
-		assert.Equal(t, []string{"A", "B", "C"}, rr.SendOrder())
+		assert.Equal(t, "", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("A", true)
+
+		assert.Equal(t, "A", rr.ChooseBackend())
+		assert.Equal(t, "A", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("B", true)
+
+		assert.Equal(t, "B", rr.ChooseBackend())
+		assert.Equal(t, "A", rr.ChooseBackend())
+
+		rr.UpdateBackendHealth("C", true)
+
+		assert.Equal(t, "B", rr.ChooseBackend())
+		assert.Equal(t, "C", rr.ChooseBackend())
+		assert.Equal(t, "A", rr.ChooseBackend())
 	})
 }
