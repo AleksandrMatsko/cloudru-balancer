@@ -45,7 +45,7 @@ func (rr *RoundRobin) ChooseBackend() string {
 	return ""
 }
 
-// UpdateBackendHealth
+// UpdateBackendHealth marks given backend health.
 func (rr *RoundRobin) UpdateBackendHealth(backend string, healthy bool) {
 	rr.locker.Lock()
 	defer rr.locker.Unlock()
