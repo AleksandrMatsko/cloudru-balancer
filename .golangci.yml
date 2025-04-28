@@ -1,0 +1,99 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - decorder
+    - dogsled
+    - errcheck
+    - errorlint
+    - gocheckcompilerdirectives
+    - goconst
+    - gocyclo
+    - godot
+    - goheader
+    - govet
+    - grouper
+    - ineffassign
+    - loggercheck
+    - makezero
+    - misspell
+    - mnd
+    - nilerr
+    - noctx
+    - prealloc
+    - promlinter
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+  settings:
+    gocyclo:
+      min-complexity: 15
+    govet:
+      enable:
+        - shadow
+      settings:
+        printf:
+          funcs:
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+            - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+    mnd:
+      checks:
+        - argument
+        - case
+        - condition
+        - return
+      ignored-numbers:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+        - "10"
+        - "60"
+        - "64"
+        - "100"
+        - "600"
+        - "0755"
+        - "0644"
+        - "0666"
+    unparam:
+      check-exported: false
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - goconst
+          - mnd
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      module-path: cloudru-balancer
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
