@@ -1,0 +1,15 @@
+# List of backend hosts, to which requests must be routed.
+backends:
+  - "cloudru-balancer-dummy-backend-1:8081"
+  - "cloudru-balancer-dummy-backend-2:8081"
+# Port to bind for balancer.
+port: 8081
+# Name of strategy to use. Now available:
+# - "RoundRobin"
+strategy: "RoundRobin"
+# Healthchecks configuration.
+healthcheck:
+  # Every check_timeout_seconds balancer will perform GET request to "/" to check backend health.
+  check_timeout_seconds: 1
+  # Timeout for health check request.
+  request_timeout_seconds: 1

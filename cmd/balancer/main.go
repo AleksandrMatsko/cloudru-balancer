@@ -26,6 +26,7 @@ var (
 func main() {
 	flag.Parse()
 	logger := slog.Default()
+	defer logger.Info("Balancer stop")
 
 	appConfig := config.DefaultForBalancer()
 	err := config.Read(*configFileNameFlag, &appConfig)
@@ -87,6 +88,7 @@ func main() {
 	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		logger.Warn("ListenAndServe",
 			slog.String("error", err.Error()))
+		return
 	}
 
 	<-shutdownWaitChan
