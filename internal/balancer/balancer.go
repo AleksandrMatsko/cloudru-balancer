@@ -80,7 +80,7 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ErrorResponse returned to client, when error occurred.
 type ErrorResponse struct {
-	// Msg includes occured error.
+	// Msg includes occurred error.
 	Msg string `json:"msg"`
 	// Code is the returned http status code.
 	Code int `json:"status"`
