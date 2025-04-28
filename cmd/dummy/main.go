@@ -35,6 +35,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	logger := slog.Default()
+	defer logger.Info("Dummy backend stop")
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8081",

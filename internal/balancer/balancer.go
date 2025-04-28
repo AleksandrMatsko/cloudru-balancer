@@ -78,9 +78,12 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
+// ErrorResponse returned to client, when error occurred.
 type ErrorResponse struct {
-	Msg  string `json:"msg"`
-	Code int    `json:"status"`
+	// Msg includes occured error.
+	Msg string `json:"msg"`
+	// Code is the returned http status code.
+	Code int `json:"status"`
 }
 
 func createErrorHandler(logger *slog.Logger) func(http.ResponseWriter, *http.Request, error) {
