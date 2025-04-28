@@ -34,7 +34,7 @@ func main() {
 	logger := slog.Default()
 
 	server := http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "0.0.0.0:8081",
 		Handler: &handler{logger: logger},
 	}
 

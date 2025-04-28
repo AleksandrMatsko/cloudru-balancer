@@ -1,0 +1,12 @@
+FROM golang:1.24
+
+WORKDIR /app
+COPY . ./
+
+RUN go mod download 
+
+RUN make build-dummy
+
+EXPOSE 8081
+
+CMD ["./dummy"]
