@@ -3,11 +3,11 @@ GOLANGCI_LINT_VERSION := ""
 
 .PHONY: build-balancer
 build-balancer:
-	go build github.com/AleksandrMatsko/cloudru-balancer/cmd/balancer
+	CGO_ENABLED=0 GOOS=linux go build github.com/AleksandrMatsko/cloudru-balancer/cmd/balancer
 
 .PHONY: build-dummy
 build-dummy:
-	go build github.com/AleksandrMatsko/cloudru-balancer/cmd/dummy
+	CGO_ENABLED=0 GOOS=linux go build github.com/AleksandrMatsko/cloudru-balancer/cmd/dummy
 
 .PHONY: test
 test:

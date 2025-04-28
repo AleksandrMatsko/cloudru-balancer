@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	configFileNameFlag = flag.String("config", "./cloudru_balancer.yml", "Path to configuration file")
+	configFileNameFlag = flag.String("config", "/etc/cloudru_balancer/balancer.yml", "Path to configuration file")
 	printConfigFlag    = flag.Bool("print-config", false, "Print current config to stdout")
 )
 

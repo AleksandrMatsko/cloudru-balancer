@@ -1,0 +1,14 @@
+FROM golang:1.24
+
+WORKDIR /app
+COPY . ./
+
+RUN go mod download 
+
+RUN make build-balancer
+
+COPY ./configs/cloudru_balancer.yml /etc/cloudru_balancer/balancer.yml
+
+EXPOSE 8081
+
+CMD ["./balancer"]

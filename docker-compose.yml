@@ -1,0 +1,21 @@
+name: cloudru-balancer
+
+services:
+  balancer:
+    build:
+      context: .
+      dockerfile: ./build/packages/Dockerfile.balancer
+    ports:
+      - "8081:8081"
+    volumes:
+      - "./configs/cloudru_balancer.yml:/etc/cloudru_balancer/balancer.yml"
+  
+  dummy-backend:
+    build:
+      context: .
+      dockerfile: ./build/packages/Dockerfile.dummy
+    deploy:
+      replicas: 2
+    ports:
+      - "8081"
+  
