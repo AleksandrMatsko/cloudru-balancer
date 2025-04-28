@@ -15,17 +15,20 @@ type handler struct {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logger := h.logger.With(
+		slog.String("method", r.Method),
+		slog.String("uri", r.RequestURI),
+	)
+
 	defer r.Body.Close()
 	bytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		h.logger.Warn("Read body",
+		logger.Warn("Read body",
 			slog.String("error", err.Error()),
 		)
 	}
 
-	h.logger.Info("Request",
-		slog.String("method", r.Method),
-		slog.String("uri", r.RequestURI),
+	logger.Info("Request",
 		slog.String("body", string(bytes)),
 	)
 }
@@ -56,6 +59,7 @@ func main() {
 	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		logger.Warn("ListenAndServe",
 			slog.String("error", err.Error()))
+		return
 	}
 
 	<-shutdownWaitChan
