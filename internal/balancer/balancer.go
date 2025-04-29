@@ -2,12 +2,15 @@ package balancer
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 )
+
+var errNoAvailableBackends = errors.New("no available backends")
 
 // Balancer is reverse proxy that balance incoming requests between backends
 // according to the given strategy.
@@ -47,31 +50,13 @@ func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if backend == "" {
-		dto := ErrorResponse{
-			Msg:  "no available backends",
-			Code: http.StatusServiceUnavailable,
-		}
-
-		w.WriteHeader(dto.Code)
-
-		encoder := json.NewEncoder(w)
-		_ = encoder.Encode(dto)
-
+		writeErrorToClient(w, http.StatusServiceUnavailable, errNoAvailableBackends)
 		return
 	}
 
 	proxy, ok := b.proxies[backend]
 	if !ok {
-		dto := ErrorResponse{
-			Msg:  fmt.Sprintf("strategy returned not existing backend: %s", backend),
-			Code: http.StatusInternalServerError,
-		}
-
-		w.WriteHeader(dto.Code)
-
-		encoder := json.NewEncoder(w)
-		_ = encoder.Encode(dto)
-
+		writeErrorToClient(w, http.StatusInternalServerError, fmt.Errorf("strategy returned not existing backend: %s", backend))
 		return
 	}
 
@@ -94,14 +79,18 @@ func createErrorHandler(logger *slog.Logger) func(http.ResponseWriter, *http.Req
 			slog.String("url", r.RequestURI),
 		)
 
-		dto := ErrorResponse{
-			Msg:  err.Error(),
-			Code: http.StatusInternalServerError,
-		}
-
-		w.WriteHeader(dto.Code)
-
-		encoder := json.NewEncoder(w)
-		_ = encoder.Encode(dto)
+		writeErrorToClient(w, http.StatusInternalServerError, fmt.Errorf("error from backend: %w", err))
 	}
+}
+
+func writeErrorToClient(w http.ResponseWriter, statusCode int, err error) {
+	dto := ErrorResponse{
+		Msg:  err.Error(),
+		Code: statusCode,
+	}
+
+	w.WriteHeader(dto.Code)
+
+	encoder := json.NewEncoder(w)
+	_ = encoder.Encode(dto)
 }

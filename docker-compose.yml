@@ -15,7 +15,7 @@ services:
       context: .
       dockerfile: ./build/packages/Dockerfile.dummy
     deploy:
-      replicas: 2
+      replicas: 4
     ports:
       - "8081"
   

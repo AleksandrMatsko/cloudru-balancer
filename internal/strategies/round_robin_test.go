@@ -58,13 +58,13 @@ func TestRoundRobin(t *testing.T) {
 
 		rr.UpdateBackendHealth("B", true)
 
-		assert.Equal(t, "B", rr.ChooseBackend())
 		assert.Equal(t, "A", rr.ChooseBackend())
+		assert.Equal(t, "B", rr.ChooseBackend())
 
 		rr.UpdateBackendHealth("C", true)
 
-		assert.Equal(t, "B", rr.ChooseBackend())
 		assert.Equal(t, "C", rr.ChooseBackend())
 		assert.Equal(t, "A", rr.ChooseBackend())
+		assert.Equal(t, "B", rr.ChooseBackend())
 	})
 }
