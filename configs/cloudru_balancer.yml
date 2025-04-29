@@ -1,8 +1,11 @@
 backends:
   - "cloudru-balancer-dummy-backend-1:8081"
   - "cloudru-balancer-dummy-backend-2:8081"
+  - "cloudru-balancer-dummy-backend-3:8081"
+  - "cloudru-balancer-dummy-backend-4:8081"
 port: 8081
 healthcheck:
   check_timeout_seconds: 1
   request_timeout_seconds: 1
+strategy: "Random"
   

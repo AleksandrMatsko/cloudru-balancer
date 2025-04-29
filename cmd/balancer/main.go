@@ -105,6 +105,10 @@ func createStrategy(conf config.Balancer) (observingStrategy, error) {
 		return strategies.NewRoundRobin(
 			conf.Backends,
 		), nil
+	case "Random":
+		return strategies.NewRandom(
+			conf.Backends,
+		), nil
 	default:
 		return nil, fmt.Errorf("unknown strategy: %s", conf.Strategy)
 	}

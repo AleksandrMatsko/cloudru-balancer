@@ -6,6 +6,7 @@ backends:
 port: 8081
 # Name of strategy to use. Now available:
 # - "RoundRobin"
+# - "Random"
 strategy: "RoundRobin"
 # Healthchecks configuration.
 healthcheck:

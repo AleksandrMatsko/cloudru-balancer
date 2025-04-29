@@ -4,40 +4,53 @@ import (
 	"sync"
 )
 
+type backendState struct {
+	rwLock    *sync.RWMutex
+	available bool
+}
+
 // RoundRobin is a cyclic balancer strategy.
 type RoundRobin struct {
-	backendAvailable map[string]bool
-	// allBackends is a slice of available backend's hosts. Methods must not mutate the slice.
-	allBackends []string
-	// locker protects startIndex and backendAvailable map
-	locker     sync.Locker
-	startIndex int
+	backendAvailable map[string]*backendState
+	allBackends      []string
+	indexLock        sync.Locker
+	startIndex       int
 }
 
 // NewRoundRobin creates RoundRobin.
 func NewRoundRobin(backends []string) *RoundRobin {
-	availabilityMap := make(map[string]bool)
+	availabilityMap := make(map[string]*backendState)
 	for i := range backends {
-		availabilityMap[backends[i]] = false
+		availabilityMap[backends[i]] = &backendState{
+			rwLock:    &sync.RWMutex{},
+			available: false,
+		}
 	}
 
 	return &RoundRobin{
 		backendAvailable: availabilityMap,
 		allBackends:      backends,
-		locker:           &sync.Mutex{},
+		indexLock:        &sync.Mutex{},
 		startIndex:       0,
 	}
 }
 
 // ChooseBackend returns backend host which is ready to receive request.
 func (rr *RoundRobin) ChooseBackend() string {
-	rr.locker.Lock()
-	defer rr.locker.Unlock()
+	rr.indexLock.Lock()
+	startIndex := rr.startIndex
+	rr.startIndex += 1
+	rr.indexLock.Unlock()
 
 	for i := range rr.allBackends {
-		candidate := rr.allBackends[(rr.startIndex+i)%len(rr.allBackends)]
-		if rr.backendAvailable[candidate] {
-			rr.startIndex = (rr.startIndex + i + 1) % len(rr.allBackends)
+		candidate := rr.allBackends[(startIndex+i)%len(rr.allBackends)]
+		state := rr.backendAvailable[candidate]
+
+		state.rwLock.RLock()
+		available := state.available
+		state.rwLock.RUnlock()
+
+		if available {
 			return candidate
 		}
 	}
@@ -47,10 +60,21 @@ func (rr *RoundRobin) ChooseBackend() string {
 
 // UpdateBackendHealth marks given backend health.
 func (rr *RoundRobin) UpdateBackendHealth(backend string, healthy bool) {
-	rr.locker.Lock()
-	defer rr.locker.Unlock()
+	updateBackendHeath(rr.backendAvailable, backend, healthy)
+}
 
-	if _, ok := rr.backendAvailable[backend]; ok {
-		rr.backendAvailable[backend] = healthy
+func updateBackendHeath(backendAvailable map[string]*backendState, backend string, healthy bool) {
+	if state, ok := backendAvailable[backend]; ok {
+		state.rwLock.RLock()
+		same := state.available == healthy
+		state.rwLock.RUnlock()
+
+		if same {
+			return
+		}
+
+		state.rwLock.Lock()
+		state.available = healthy
+		state.rwLock.Unlock()
 	}
 }
