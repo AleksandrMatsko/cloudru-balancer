@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
+	_ "go.uber.org/automaxprocs"
 )
 
 type handler struct {

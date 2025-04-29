@@ -16,6 +16,8 @@ import (
 	"github.com/AleksandrMatsko/cloudru-balancer/internal/config"
 	"github.com/AleksandrMatsko/cloudru-balancer/internal/health"
 	"github.com/AleksandrMatsko/cloudru-balancer/internal/strategies"
+
+	_ "go.uber.org/automaxprocs"
 )
 
 var (
