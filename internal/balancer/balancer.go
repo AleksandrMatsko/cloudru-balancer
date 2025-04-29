@@ -43,22 +43,26 @@ func NewBalancer(
 
 func (b *Balancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	backend := b.strategy.ChooseBackend()
-	b.logger.Info("Request",
+	logger := b.logger.With(
 		slog.String("method", r.Method),
 		slog.String("url", r.RequestURI),
 		slog.String("chosen_backend", backend),
 	)
 
 	if backend == "" {
+		logger.Error("No available backends for request")
 		writeErrorToClient(w, http.StatusServiceUnavailable, errNoAvailableBackends)
 		return
 	}
 
 	proxy, ok := b.proxies[backend]
 	if !ok {
+		logger.Error("Unknown backend")
 		writeErrorToClient(w, http.StatusInternalServerError, fmt.Errorf("strategy returned not existing backend: %s", backend))
 		return
 	}
+
+	logger.Info("Serving request")
 
 	proxy.ServeHTTP(w, r)
 }
